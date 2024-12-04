@@ -1,0 +1,32 @@
+#!/bin/sh 
+#
+# xlesar.tcl launcher
+# requires that wish is installed and in the path
+#
+# 2018/11/05
+# should work with any wish >= 8.4
+# 2019/04/09
+####
+#### NO ! SHOULD work with wish8.5
+####
+# - in most install, wish is a link on the current version, thus "exec wish" is ok 
+# - sometimes, wish does not exists, but wish8.X yes
+
+WISH=""
+for ww in wish wish8.5 wish8.6; do
+#for ww in wish8.5; do
+	WISH=`command -v $ww`
+	if [ -n "$WISH" ]; then
+		break
+	fi
+done
+
+if [ -z "$WISH" ]; then
+	>&2 echo "Error: can't find a suitable 'wish' command (check tcl/tk install)"
+	exit 1
+else
+	echo "#find tcltk interpretor: '$WISH'"
+	XLESAR_PATH=$LUSTRE_INSTALL/tcl
+	export XLESAR_PATH
+	exec $WISH $XLESAR_PATH/xlesar.tcl $*
+fi

@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# 1998-2018
+# 
+
+
+EXE=`basename $0`
+VERSION=2.0
+O2A_VERSION=`oc2atg -version`
+
+function USAGE {
+  echo "$EXE $VERSION (oc2atg $O2A_VERSION)"
+  echo "usage:"
+  echo "$EXE <file.lus> <node> [<options>]"
+  echo "
+   lus2ec:
+      -lv6 : use lustre v6 compiler (instead of pollux)
+   ec2oc:
+      -unctrl <id>: consider id as uncontrolable input when computing causal assertion
+      -bddpage <int> : set the size of a bdds page (in K-units)
+      -states <int> : stop after generating <int> states
+      -merge : allows mixing state variables and conditions in bdds
+   oc2atg:
+      -hp : (labels) hide positive inputs
+      -hm : (labels) hide negative inputs
+      -ht : (labels) hide don't care inputs
+      -hi : (labels) hide all input info
+      -ho : (labels) hide all output info
+      -hs : (labels) no separator between inputs and outputs
+      -bf : (labels) Boolean function like labels
+      -aut : (labels) Aut function like labels
+"
+
+}
+
+
+#echo $#
+
+if [ $# -lt 2 ] ; then
+  USAGE
+  exit
+fi
+
+function lv62ec {
+   file=$1
+   node=$2
+   echo "lus2lic -ec $file -n $node -o $node.ec"
+   lus2lic -ec "$file" -n $node -o "$node.ec"
+}
+
+zefile=$1
+shift
+node=$1
+shift
+LUS2EC=lus2ec
+ocargs=""
+atgargs=""
+while [ $# -gt 0 ]; do
+	#echo $1
+	case "$1" in
+		"-lv6")
+			LUS2EC=lv62ec
+		;;
+		"-unctrl")
+			ocargs="$ocargs $1 $2"
+			shift
+		;;
+		"-bddpage")
+			ocargs="$ocargs $1 $2"
+			shift
+		;;
+		"-states")
+			ocargs="$ocargs $1 $2"
+			shift
+		;;
+		"-merge")
+			ocargs="$ocargs $1"
+			atgargs="$atgargs $1"
+		;;
+		"-v")
+			ocargs="$ocargs $1"
+			atgargs="$atgargs $1"
+		;;
+		"-vv")
+			ocargs="$ocargs $1"
+			atgargs="$atgargs $1"
+		;;
+		*)
+			atgargs="$atgargs $1"
+		;;
+	esac
+	shift
+done
+
+echo ocargs=$ocargs
+echo atgargs=$atgargs
+echo LUS2EC=$LUS2EC
+
+$LUS2EC $zefile $node
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+ec2oc ${node}.ec -oc2 -pure -S4 -causal -merge -data $ocargs
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+/bin/rm -f $node.ec
+ocmin $node.oc -v
+/bin/mv -f ${node}_min.oc $node.oc
+oc2atg $node.oc -o $node $atgargs
+ok=$?
+/bin/rm -f $node.oc
+if [ $ok -ne 0 ]; then 
+	echo "Something where wrong ..."
+else
+	echo "File $node.atg created"
+fi
