@@ -1,0 +1,129 @@
+-- rising_edge code
+
+node rising_edge (X : bool) returns (Y : bool) ;
+let
+	Y = X -> (X and not pre(X)) ;
+tel ;
+
+
+-- falling_edge code
+
+node falling_edge (X : bool) returns (Y : bool) ;
+let
+	Y = rising_edge (not X) ;
+tel ;
+
+-- counter operator
+
+node counter (const N: int ; RAZ: bool) returns (Top: bool);
+var cpt:int;
+let
+	cpt = 1 -> if RAZ then 0 else pre(cpt)+1;
+	Top = (cpt = N);
+tel;
+
+-- simulation du compteur
+
+node sim_counter (RAZ: bool) returns (Top: bool);
+let
+	Top = counter (5, RAZ);
+tel;
+
+
+
+-- RS Switch operator
+
+
+
+
+node RS_switch1 (reset, set, init: bool) returns (level: bool);
+let
+	level = 1 -> set or pre(level);
+	level = 0 -> reset and not(set);
+tel;
+
+-- (pre(level) and not reset) or set
+
+
+-- RS Switch2 operator
+
+node RS_switch2 (reset, set, init: bool) returns (level: bool);
+
+
+
+
+
+
+node one_button_switch (button: bool) returns (level: bool);
+
+
+
+
+
+node STABLE (set:bool ; delay: int) returns (level: bool);
+var t:int;
+let
+	t = delay -> if set then pre(t)-1;
+	level = false -> set or (pre(level) and (t>0));
+tel;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+node delay (const d: int ; X: bool) returns (Y: bool);
+var cpt:int;
+let
+	cpt = d -> pre(cpt)-1;
+	Y = X or (cpt > 0);
+tel;
+
+
+node simu_delay (X: bool) returns (Y: bool);
+let
+	Y = delay(4, X);
+tel;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
